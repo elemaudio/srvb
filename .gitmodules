@@ -1,0 +1,9 @@
+[submodule "elementary"]
+	path = elementary
+	url = git@github.com:elemaudio/elementary.git
+[submodule "juce"]
+	path = juce
+	url = https://github.com/juce-framework/JUCE.git
+[submodule "choc"]
+	path = choc
+	url = https://github.com/nick-thompson/choc.git
