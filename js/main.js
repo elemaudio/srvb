@@ -1,31 +1,39 @@
 import {Renderer, el} from '@elemaudio/core';
 
 
-// This example is the "Hello, world!" of writing audio processes in Elementary, and is
-// intended to be run by the simple cli tool provided in the repository.
+// This example demonstrates writing a very simple chorus effect in Elementary, with a
+// custom Renderer instance that marshals our instruction batches through the __postNativeMessage__
+// function injected into the environment from C++.
 //
-// Because we know that our cli will open the audio device with a sample rate of 44.1kHz,
-// we can simply create a generic Renderer straight away and ask it to render our basic
-// example.
-//
-// The signal we're generating here is a simple sine tone via `el.cycle` at 440Hz in the left
-// channel and 441Hz in the right, creating some interesting binaural beating. Each sine tone is
-// then multiplied by 0.3 to apply some simple gain before going to the output. That's it!
+// Below, we establish a __receiveStateChange__ callback function which will be invoked by the
+// native PluginProcessor when any relevant state changes and we need to update our signal graph.
 let core = new Renderer(__getSampleRate__(), (batch) => {
   __postNativeMessage__(JSON.stringify(batch));
 });
 
+// Our main signal processing function
+function chorus(props, xn) {
+  let rate = el.sm(el.const({key: 'rate', value: 0.001 + props.rate}));
+  let depth = el.sm(el.const({key: 'depth', value: 10 + 20 * props.depth}));
+
+  let sr = __getSampleRate__();
+  let wet = el.delay(
+    {size: sr * 100 / 1000},
+    el.ms2samps(el.add(20, el.mul(depth, 0.5), el.mul(0.5, depth, el.triangle(rate)))),
+    0,
+    xn,
+  );
+
+  return el.mul(Math.sqrt(2) / 2, el.add(xn, wet));
+}
+
+// Our state change callback
 globalThis.__receiveStateChange__ = (state) => {
-  const params = JSON.parse(state);
-
-  console.log(params);
-
-  let rate = el.sm(el.const({key: 'rate', value: params.rate}));
-  let depth = el.sm(el.const({key: 'depth', value: params.depth}));
+  const props = JSON.parse(state);
 
   let stats = core.render(
-    el.mul(rate, el.cycle(440)),
-    el.mul(depth, el.cycle(441)),
+    chorus(props, el.in({channel: 0})),
+    chorus(props, el.in({channel: 1})),
   );
 
   console.log(stats);
