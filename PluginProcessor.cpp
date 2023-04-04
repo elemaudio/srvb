@@ -30,6 +30,46 @@ EffectsPluginProcessor::EffectsPluginProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
      , jsContext(choc::javascript::createQuickJSContext())
 {
+    // Initialize parameters from the manifest file
+    auto manifestFile = getAssetsDirectory().getChildFile("manifest.json");
+
+    if (manifestFile.existsAsFile()) {
+        auto manifest = elem::js::parseJSON(manifestFile.loadFileAsString().toStdString());
+
+        if (!manifest.isObject())
+            return;
+
+        auto parameters = manifest.getWithDefault("parameters", elem::js::Array());
+
+        for (size_t i = 0; i < parameters.size(); ++i) {
+            auto descrip = parameters[i];
+
+            if (!descrip.isObject())
+                continue;
+
+            auto paramId = descrip.getWithDefault("paramId", elem::js::String("unknown"));
+            auto name = descrip.getWithDefault("name", elem::js::String("Unknown"));
+            auto minValue = descrip.getWithDefault("min", elem::js::Number(0));
+            auto maxValue = descrip.getWithDefault("max", elem::js::Number(1));
+            auto defValue = descrip.getWithDefault("defaultValue", elem::js::Number(0));
+
+            auto* p = new juce::AudioParameterFloat(
+                juce::ParameterID(paramId, 1),
+                name,
+                {static_cast<float>(minValue), static_cast<float>(maxValue)},
+                defValue
+            );
+
+            p->addListener(this);
+            addParameter(p);
+
+            // Push a new ParameterReadout onto the list to represent this parameter
+            paramReadouts.emplace_back(ParameterReadout { static_cast<float>(defValue), false });
+
+            // Update our state object with the default parameter value
+            state.insert_or_assign(paramId, defValue);
+        }
+    }
 }
 
 EffectsPluginProcessor::~EffectsPluginProcessor()

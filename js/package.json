@@ -1,7 +1,11 @@
 {
   "type": "module",
   "scripts": {
-    "build": "esbuild *.js --bundle --outdir=dist"
+    "clean": "rm -rf dist",
+    "copy": "cp manifest.json dist/",
+    "prebuild": "npm run clean",
+    "build": "esbuild *.js --bundle --outdir=dist",
+    "postbuild": "npm run copy"
   },
   "dependencies": {
     "@elemaudio/core": "^2.0.0-alpha.0",
