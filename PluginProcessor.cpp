@@ -136,52 +136,22 @@ void EffectsPluginProcessor::changeProgramName (int /* index */, const juce::Str
 //==============================================================================
 void EffectsPluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    runtime = std::make_unique<elem::Runtime<float>>(sampleRate, samplesPerBlock);
-    jsContext = choc::javascript::createQuickJSContext();
+    // Some hosts call `prepareToPlay` on the real-time thread, some call it on the main thread.
+    // To address the discrepancy, we check whether anything has changed since our last known
+    // call. If it has, we flag for initialization of the Elementary engine and runtime, then
+    // trigger an async update.
+    //
+    // JUCE will synchronously handle the async update if it understands
+    // that we're already on the main thread.
+    if (sampleRate != lastKnownSampleRate || samplesPerBlock != lastKnownBlockSize) {
+        lastKnownSampleRate = sampleRate;
+        lastKnownBlockSize = samplesPerBlock;
 
-    // Install some native interop functions in our JavaScript environment
-    jsContext.registerFunction("__getSampleRate__", [this](choc::javascript::ArgumentList args) {
-        return choc::value::Value(getSampleRate());
-    });
-
-    jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
-        runtime->applyInstructions(elem::js::parseJSON(args[0]->toString()));
-        return choc::value::Value();
-    });
-
-    jsContext.registerFunction("__log__", [](choc::javascript::ArgumentList args) {
-        for (size_t i = 0; i < args.numArgs; ++i) {
-            DBG(choc::json::toString(*args[i], true));
-        }
-
-        return choc::value::Value();
-    });
-
-    // A simple shim to write various console operations to our native __log__ handler
-    jsContext.evaluate(R"shim(
-(function() {
-  if (typeof globalThis.console === 'undefined') {
-    globalThis.console = {
-      log(...args) {
-        __log__('[log]', ...args);
-      },
-      warn(...args) {
-          __log__('[warn]', ...args);
-      },
-      error(...args) {
-          __log__('[error]', ...args);
-      }
-    };
-  }
-})();
-    )shim");
-
-    // Load and evaluate our Elementary js main file
-    auto dspEntryFile = getAssetsDirectory().getChildFile("main.js");
-    jsContext.evaluate(dspEntryFile.loadFileAsString().toStdString());
+        shouldInitialize.store(true);
+    }
 
     // Now that the environment is set up, push our current state
-    dispatchStateChange();
+    triggerAsyncUpdate();
 }
 
 void EffectsPluginProcessor::releaseResources()
@@ -231,6 +201,56 @@ void EffectsPluginProcessor::parameterGestureChanged (int, bool)
 //==============================================================================
 void EffectsPluginProcessor::handleAsyncUpdate()
 {
+    // First things first, we check the flag to identify if we should initialize the Elementary
+    // runtime and engine.
+    if (shouldInitialize.exchange(false)) {
+        runtime = std::make_unique<elem::Runtime<float>>(lastKnownSampleRate, lastKnownBlockSize);
+        jsContext = choc::javascript::createQuickJSContext();
+
+        // Install some native interop functions in our JavaScript environment
+        jsContext.registerFunction("__getSampleRate__", [this](choc::javascript::ArgumentList args) {
+            return choc::value::Value(getSampleRate());
+        });
+
+        jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
+            runtime->applyInstructions(elem::js::parseJSON(args[0]->toString()));
+            return choc::value::Value();
+        });
+
+        jsContext.registerFunction("__log__", [](choc::javascript::ArgumentList args) {
+            for (size_t i = 0; i < args.numArgs; ++i) {
+                DBG(choc::json::toString(*args[i], true));
+            }
+
+            return choc::value::Value();
+        });
+
+        // A simple shim to write various console operations to our native __log__ handler
+        jsContext.evaluate(R"shim(
+    (function() {
+      if (typeof globalThis.console === 'undefined') {
+        globalThis.console = {
+          log(...args) {
+            __log__('[log]', ...args);
+          },
+          warn(...args) {
+              __log__('[warn]', ...args);
+          },
+          error(...args) {
+              __log__('[error]', ...args);
+          }
+        };
+      }
+    })();
+        )shim");
+
+        // Load and evaluate our Elementary js main file
+        auto dspEntryFile = getAssetsDirectory().getChildFile("main.js");
+        jsContext.evaluate(dspEntryFile.loadFileAsString().toStdString());
+    }
+
+    // Next we iterate over the current parameter values to update our local state
+    // object, which we in turn dispatch into the JavaScript engine
     auto& params = getParameters();
 
     // Reduce over the changed parameters to resolve our updated processor state

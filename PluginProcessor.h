@@ -64,6 +64,10 @@ public:
 
 private:
     //==============================================================================
+    std::atomic<bool> shouldInitialize { false };
+    double lastKnownSampleRate = 0;
+    int lastKnownBlockSize = 0;
+
     elem::js::Object state;
     choc::javascript::Context jsContext;
 
