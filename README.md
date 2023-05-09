@@ -50,7 +50,7 @@ Next, assuming your familiarity with JUCE, we break down this example project as
 * Finally, in the `processBlock` method, we simply forward the relevant audio data into Elementary's audio engine `process` method to perform the graph rendering step.
 
 With this architecture, we have all of the necessary boilerplate code in C++ to build a plugin, but
-all of the details around _what_ this plugin does (in terms of audio processing) is provided by theJavaScript bundle.
+all of the details around _what_ this plugin does (in terms of audio processing) is provided by the JavaScript bundle.
 
 So to hack around and explore this example plugin, you can simply edit `js/main.js` and `js/manifest.json`, rebuild the project, and test your plugins!
 
