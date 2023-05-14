@@ -4,7 +4,7 @@
     "clean": "rimraf dist",
     "copy": "cpy manifest.json dist/",
     "prebuild": "npm run clean",
-    "build": "esbuild *.js --bundle --outdir=dist",
+    "build": "esbuild main.js --bundle --outdir=dist",
     "postbuild": "npm run copy"
   },
   "dependencies": {
