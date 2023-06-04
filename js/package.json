@@ -8,7 +8,7 @@
     "postbuild": "npm run copy"
   },
   "dependencies": {
-    "@elemaudio/core": "^2.0.0-alpha.0",
+    "@elemaudio/core": "^2.0.1",
     "cpy-cli": "^4.2.0",
     "esbuild": "^0.17.8",
     "rimraf": "^5.0.0"
