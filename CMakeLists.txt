@@ -3,7 +3,7 @@ project(ElemEffectsPlugin VERSION 0.1.0)
 
 
 set(TARGET_NAME FXP)
-set(ASSETS_DIR js/dist/)
+set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/js/dist/)
 
 option(JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 option(JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
@@ -18,18 +18,29 @@ juce_add_plugin(${TARGET_NAME}
   COMPANY_EMAIL "nick@elementary.audio"
   PLUGIN_MANUFACTURER_CODE Elem       # A four-character manufacturer id with at least one upper-case character
   PLUGIN_CODE Fxpl                    # A unique four-character plugin id with at least one upper-case character
-  COPY_PLUGIN_AFTER_BUILD TRUE        # Should the plugin be installed to a default location after building?
+  COPY_PLUGIN_AFTER_BUILD FALSE       # We enable this manually below after adding a copy step
   APP_SANDBOX_ENABLED TRUE
   APP_SANDBOX_OPTIONS com.apple.security.network.client com.apple.security.files.user-selected.read-write
-  FORMATS AU VST3 Standalone          # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
+  FORMATS AU VST3                     # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
   PRODUCT_NAME ${TARGET_NAME})        # The name of the final executable, which can differ from the target name
 
-juce_add_bundle_resources_directory(${TARGET_NAME}_VST3 ${ASSETS_DIR})
-juce_add_bundle_resources_directory(${TARGET_NAME}_Standalone ${ASSETS_DIR})
+# Copy static assets post build
+get_target_property(ACTIVE_TARGETS ${TARGET_NAME} JUCE_ACTIVE_PLUGIN_TARGETS)
+foreach(ACTIVE_TARGET IN LISTS ACTIVE_TARGETS)
+  message(STATUS "Adding resource copy step from ${ASSETS_DIR} for ${ACTIVE_TARGET}")
 
-if(TARGET ${TARGET_NAME}_AU)
-  juce_add_bundle_resources_directory(${TARGET_NAME}_AU ${ASSETS_DIR})
-endif()
+  get_target_property(ARTIFACT_FILE ${ACTIVE_TARGET} JUCE_PLUGIN_ARTEFACT_FILE)
+  set(RESOURCE_DIR "${ARTIFACT_FILE}/Contents/Resources/")
+
+  add_custom_command(TARGET ${ACTIVE_TARGET} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rm -rf "${RESOURCE_DIR}/dist"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${RESOURCE_DIR}/dist"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${RESOURCE_DIR}/dist"
+    VERBATIM)
+endforeach()
+
+# Enable copy step
+juce_enable_copy_plugin_step(${TARGET_NAME})
 
 target_sources(${TARGET_NAME}
   PRIVATE
