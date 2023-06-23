@@ -61,6 +61,7 @@ public:
     //==============================================================================
     /** Internal helper for propagating processor state changes. */
     void dispatchStateChange();
+    void dispatchError(std::string const& name, std::string const& message);
 
 private:
     //==============================================================================

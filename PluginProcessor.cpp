@@ -213,7 +213,14 @@ void EffectsPluginProcessor::handleAsyncUpdate()
         });
 
         jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
-            runtime->applyInstructions(elem::js::parseJSON(args[0]->toString()));
+            try {
+                runtime->applyInstructions(elem::js::parseJSON(args[0]->toString()));
+            } catch (elem::InvariantViolation const& e) {
+                dispatchError("InvariantViolation", e.what());
+            } catch (...) {
+                dispatchError("Unknown", "Unhandled exception");
+            }
+
             return choc::value::Value();
         });
 
@@ -292,6 +299,29 @@ void EffectsPluginProcessor::dispatchStateChange()
     // serialize produces the payload we want, the second serialize ensures we can replace
     // the % character in the above block and produce a valid javascript expression.
     auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(state))).toStdString();
+
+    // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
+    // here on the main thread
+    jsContext.evaluate(expr);
+}
+
+void EffectsPluginProcessor::dispatchError(std::string const& name, std::string const& message)
+{
+    const auto* kDispatchScript = R"script(
+(function() {
+  if (typeof globalThis.__receiveError__ !== 'function')
+    return false;
+
+  let e = new Error(%);
+  e.name = @;
+
+  globalThis.__receiveError__(e);
+  return true;
+})();
+)script";
+
+    // Need the serialize here to correctly form the string script.
+    auto expr = juce::String(kDispatchScript).replace("@", elem::js::serialize(name)).replace("%", elem::js::serialize(message)).toStdString();
 
     // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
     // here on the main thread

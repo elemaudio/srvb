@@ -39,3 +39,7 @@ globalThis.__receiveStateChange__ = (state) => {
   console.log(stats);
 };
 
+// And an error callback
+globalThis.__receiveError__ = (err) => {
+  console.log(`[Error: ${err.name}] ${err.message}`);
+};
