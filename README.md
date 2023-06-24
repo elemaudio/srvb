@@ -1,6 +1,11 @@
 # effects-plugin
 
-This project is a small, simple example to demonstrate using Elementary Audio to write an audio plugin. Here we tie in three different projects to facilitate a great developer experience.
+This project is a small, simple example to demonstrate using Elementary Audio to write an audio plugin. Most of the code in this repository orchestrates
+three native C++ libraries to provide a harness for using Elementary's JavaScript API. The result is that all of the logic that defines what this plugin
+sounds like is represented in the `js/` directory, and therefore, changing the way the plugin sounds can largely be done by editing the JavaScript
+and rebuilding the plugin.
+
+The native C++ libraries we're using to facilitate this are:
 
 * **Elementary** for handling your dynamic, functional audio processing
 * **JUCE** for compiling to various favorite plugin formats on various platforms
@@ -16,6 +21,8 @@ Find more in the [Elementary repository on GitHub](https://github.com/elemaudio/
 
 ## Quick Start
 
+Before running the following steps, please make sure you have CMake and Node.js installed on your system.
+
 ```bash
 # Clone the project with its submodules
 git clone --recurse-submodules https://github.com/elemaudio/effects-plugin.git
@@ -28,16 +35,19 @@ npm run build
 cd ../
 
 # Finally we can build the plugin binaries themselves
-mkdir -p build/MacOS/
-cd build/MacOS/
+mkdir -p build/native/
+cd build/native/
 
-cmake -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 ../..
+cmake ../..
 cmake --build .
 ```
 
 At this point, thanks to JUCE's helpful CMake API, you should have local plugin binaries built and copied into the correct audio plugin directories on your machine. You should now be able to open your favorite plugin host and see your new plugins.
 
-**Note**: especially on MacOS, certain plugin hosts such as Ableton Live have strict security settings that prevent them from recognizing your local binaries. To address this, you'll want to either add a codesign step to your build or address the security settings of your host.
+**Note**: the CMake build step uses JUCE's `juce_enable_copy_plugin_step`, which on Windows attempts to copy the VST3 plugin binary into `C:\Program Files`, a step that
+requires admin permissions. Therefore you should either run your build as an admin or disable the copy plugin step and manually copy the plugin binary.
+
+**Note too**: especially on MacOS, certain plugin hosts such as Ableton Live have strict security settings that prevent them from recognizing your local binaries. To address this, you'll want to either add a codesign step to your build or address the security settings of your host.
 
 ## Overview
 
