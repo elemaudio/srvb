@@ -1,4 +1,5 @@
 #include "PluginProcessor.h"
+#include "WebViewEditor.h"
 
 #include <choc_javascript_QuickJS.h>
 
@@ -83,7 +84,10 @@ EffectsPluginProcessor::~EffectsPluginProcessor()
 //==============================================================================
 juce::AudioProcessorEditor* EffectsPluginProcessor::createEditor()
 {
-    return new juce::GenericAudioProcessorEditor(*this);
+    auto indexFile = getAssetsDirectory().getChildFile("index.html");
+    auto indexFilePath = juce::URL(indexFile).toString(false).toStdString();
+
+    return new WebViewEditor(this, indexFilePath, 800, 704);
 }
 
 bool EffectsPluginProcessor::hasEditor() const
