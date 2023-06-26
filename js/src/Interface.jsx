@@ -62,7 +62,9 @@ export default function Interface(props) {
     <div className="w-full h-screen min-w-[492px] min-h-[238px] bg-slate-800 bg-mesh p-8">
       <div className="h-1/5 flex justify-between items-center text-md text-slate-400">
         <img src={Lockup} className="h-8 w-auto" />
-        <span className="font-bold">SRVB</span>
+        <div>
+          <span className="font-bold">SRVB</span> &middot; {__BUILD_DATE__} &middot; {__COMMIT_HASH__}
+        </div>
       </div>
       <div className="flex flex-col h-4/5">
         {props.error && (<ErrorAlert message={props.error.message} reset={props.resetErrorState} />)}
