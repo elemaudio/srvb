@@ -4,7 +4,7 @@ import { XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
 import Knob from './Knob.jsx';
 import Lockup from './Lockup_Dark2.svg';
 
-import manifest from '../../manifest.json';
+import manifest from '../manifest.json';
 
 
 function ErrorAlert({message, reset}) {
