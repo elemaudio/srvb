@@ -7,11 +7,10 @@ import manifest from '../../manifest.json';
 
 
 // The interface of our plugin, exported here as a React.js function
-// component. The host may use this component to render the interface of our
-// plugin where appropriate.
+// component.
 //
-// We use the `props.requestParamValueUpdate` callback provided by the caller
-// of this function to propagate new parameter values to the host.
+// We use the `props.requestParamValueUpdate` callback provided by the parent
+// component to propagate new parameter values to the host.
 export default function Interface(props) {
   const colorProps = {
     meterColor: '#EC4899',
@@ -20,14 +19,14 @@ export default function Interface(props) {
   };
 
   let params = manifest.parameters.map(({paramId, name, min, max, defaultValue}) => {
-    let currentValue = props[name] || 0;
+    let currentValue = props[paramId] || 0;
 
     return {
       paramId,
       name,
       value: currentValue,
       readout: `${Math.round(currentValue * 100)}%`,
-      setValue: (v) => props.requestParamValueUpdate(name, v),
+      setValue: (v) => props.requestParamValueUpdate(paramId, v),
     };
   });
 

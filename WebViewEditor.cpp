@@ -81,12 +81,13 @@ choc::value::Value WebViewEditor::handleSetParameterValueEvent(const choc::value
     // When setting a parameter value, we simply tell the host. This will in turn fire
     // a parameterValueChanged event, which will catch and propagate through dispatching
     // a state change event
-    if (e.isObject() && e.hasObjectMember("name") && e.hasObjectMember("value")) {
+    if (e.isObject() && e.hasObjectMember("paramId") && e.hasObjectMember("value")) {
+        auto const& paramId = e["paramId"].getString();
         double const v = numberFromChocValue(e["value"]);
 
         for (auto& p : getAudioProcessor()->getParameters()) {
             if (auto* pf = dynamic_cast<juce::AudioParameterFloat*>(p)) {
-                if (pf->paramID.toStdString() == e["name"].getString()) {
+                if (pf->paramID.toStdString() == paramId) {
                     pf->setValueNotifyingHost(v);
                     break;
                 }
