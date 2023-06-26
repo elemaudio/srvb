@@ -333,6 +333,12 @@ void EffectsPluginProcessor::dispatchError(std::string const& name, std::string 
     // Need the serialize here to correctly form the string script.
     auto expr = juce::String(kDispatchScript).replace("@", elem::js::serialize(name)).replace("%", elem::js::serialize(message)).toStdString();
 
+    // First we try to dispatch to the UI if it's available, because running this step will
+    // just involve placing a message in a queue.
+    if (auto* editor = static_cast<WebViewEditor*>(getActiveEditor())) {
+        editor->getWebViewPtr()->evaluateJavascript(expr);
+    }
+
     // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
     // here on the main thread
     jsContext.evaluate(expr);
