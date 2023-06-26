@@ -4,17 +4,26 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "clean": "rimraf dist",
+    "copy": "cpy manifest.json dist/",
+    "prebuild": "npm run clean",
+    "postbuild": "npm run copy",
     "dev": "vite",
-    "build": "vite build",
-    "lint": "eslint src --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "build-dsp": "esbuild dsp/main.js --bundle --outdir=dist",
+    "build-ui": "vite build",
+    "build": "npm run build-ui && npm run build-dsp",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@elemaudio/core": "^2.0.1",
     "@heroicons/react": "^2.0.18",
     "@use-gesture/react": "^10.2.27",
+    "cpy-cli": "^4.2.0",
+    "esbuild": "^0.17.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "resize-observer-polyfill": "^1.5.1",
+    "rimraf": "^5.0.0",
     "zustand": "^4.3.8"
   },
   "devDependencies": {
@@ -22,10 +31,6 @@
     "@types/react-dom": "^18.0.11",
     "@vitejs/plugin-react": "^4.0.0",
     "autoprefixer": "^10.4.14",
-    "eslint": "^8.38.0",
-    "eslint-plugin-react": "^7.32.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.3.4",
     "postcss": "^8.4.24",
     "tailwindcss": "^3.3.2",
     "vite": "^4.3.9"
