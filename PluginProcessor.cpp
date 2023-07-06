@@ -167,8 +167,11 @@ bool EffectsPluginProcessor::isBusesLayoutSupported (const AudioProcessor::Buses
 
 void EffectsPluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /* midiMessages */)
 {
-    if (runtime == nullptr)
+    if (runtime == nullptr) {
+        // Clear the buffers from any garbage
+        for (auto i = 0; i < buffer.getNumChannels(); ++i) buffer.clear(i, 0, buffer.getNumSamples());
         return;
+    }
 
     // Copy the input so that our input and output buffers are distinct
     scratchBuffer.makeCopyOf(buffer, true);
