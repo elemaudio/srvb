@@ -340,8 +340,12 @@ void EffectsPluginProcessor::setStateInformation (const void* data, int sizeInBy
     try {
         auto str = std::string(static_cast<const char*>(data), sizeInBytes);
         auto parsed = elem::js::parseJSON(str);
-
-        state = parsed.getObject();
+        auto o = parsed.getObject();
+        for (auto  &i: o) {
+            if(state.contains(i.first)) {
+                state.insert_or_assign(i.first, i.second);
+            }
+        }
     } catch(...) {
         // Failed to parse the incoming state, or the state we did parse was not actually
         // an object type. How you handle it is up to you, here we just ignore it
