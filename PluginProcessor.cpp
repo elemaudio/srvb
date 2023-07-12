@@ -342,7 +342,9 @@ void EffectsPluginProcessor::setStateInformation (const void* data, int sizeInBy
         auto parsed = elem::js::parseJSON(str);
         auto o = parsed.getObject();
         for (auto  &i: o) {
-            if(state.contains(i.first)) {
+            std::map<std::string, elem::js::Value>::iterator it;
+            it = state.find(i.first);
+            if (it != state.end()) {
                 state.insert_or_assign(i.first, i.second);
             }
         }
