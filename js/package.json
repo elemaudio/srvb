@@ -15,7 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@elemaudio/core": "^2.0.1",
+    "@elemaudio/core": "^3.0.0",
     "@heroicons/react": "^2.0.18",
     "@use-gesture/react": "^10.2.27",
     "cpy-cli": "^4.2.0",
