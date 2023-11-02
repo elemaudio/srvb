@@ -217,12 +217,11 @@ void EffectsPluginProcessor::handleAsyncUpdate()
         });
 
         jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
-            try {
-                runtime->applyInstructions(elem::js::parseJSON(args[0]->toString()));
-            } catch (elem::InvariantViolation const& e) {
-                dispatchError("InvariantViolation", e.what());
-            } catch (...) {
-                dispatchError("Unknown", "Unhandled exception");
+            auto const batch = elem::js::parseJSON(args[0]->toString());
+            auto const rc = runtime->applyInstructions(batch);
+
+            if (rc != elem::ReturnCode::Ok()) {
+                dispatchError("Runtime Error", elem::ReturnCode::describe(rc));
             }
 
             return choc::value::Value();

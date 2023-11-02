@@ -4,7 +4,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <choc_javascript.h>
-#include <Runtime.h>
+#include <elem/Runtime.h>
 
 
 //==============================================================================

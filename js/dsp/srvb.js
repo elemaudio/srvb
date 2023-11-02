@@ -120,17 +120,12 @@ function dampFDN(name, size, decay, modDepth, ...ins) {
 // @param {core.Node} xr input
 export default function srvb(props, xl, xr) {
   invariant(typeof props === 'object', 'Unexpected props object');
-  invariant(typeof props.key === 'string', 'Unexpected key prop');
-  invariant(typeof props.size === 'number', 'Unexpected attack prop');
-  invariant(typeof props.decay === 'number', 'Unexpected release prop');
-  invariant(typeof props.mod === 'number', 'Unexpected threshold prop');
-  invariant(typeof props.mix === 'number', 'Unexpected ratio prop');
 
   const key = props.key;
-  const size = el.sm(el.const({key: `${key}:size`, value: props.size}));
-  const decay = el.sm(el.const({key: `${key}:decay`, value: props.decay}));
-  const modDepth = el.sm(el.const({key: `${key}:modDepth`, value: props.mod}));
-  const mix = el.sm(el.const({key: `${key}:mix`, value: props.mix}));
+  const size = el.sm(props.size);
+  const decay = el.sm(props.decay);
+  const modDepth = el.sm(props.mod);
+  const mix = el.sm(props.mix);
 
   // Upmix to eight channels
   const mid = el.mul(0.5, el.add(xl, xr));
