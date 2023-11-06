@@ -3,7 +3,7 @@ project(Elem_SRVB VERSION 0.1.0)
 
 
 set(TARGET_NAME SRVB)
-set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/js/dist/)
+set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/../dist/)
 
 option(JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 option(JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
