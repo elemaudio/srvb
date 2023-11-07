@@ -7,11 +7,11 @@
     "clean": "rimraf dist",
     "copy": "cpy manifest.json dist/",
     "prebuild": "npm run clean",
-    "postbuild": "npm run copy",
     "dev": "vite",
+    "build-native": "zx scripts/build-native.mjs",
     "build-dsp": "esbuild dsp/main.js --bundle --outdir=dist",
     "build-ui": "vite build",
-    "build": "npm run build-ui && npm run build-dsp",
+    "build": "npm run build-ui && npm run build-dsp && npm run copy && npm run build-native",
     "preview": "vite preview"
   },
   "dependencies": {

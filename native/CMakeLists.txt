@@ -76,3 +76,15 @@ target_link_libraries(${TARGET_NAME}
   juce::juce_gui_basics
   juce::juce_gui_extra
   runtime)
+
+install(TARGETS ${TARGET_NAME}_VST3
+  CONFIGURATIONS Release
+  COMPONENT plugin
+  DESTINATION Release)
+
+if(TARGET ${TARGET_NAME}_AU)
+  install(TARGETS ${TARGET_NAME}_AU
+    CONFIGURATIONS Release
+    COMPONENT plugin
+    DESTINATION Release)
+endif()
