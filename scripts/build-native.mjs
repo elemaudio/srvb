@@ -2,8 +2,8 @@
 
 
 let rootDir = await path.resolve(__dirname, '..');
-let buildDir = await path.resolve(rootDir, 'native/build/scripted');
-let outDir = await path.resolve(rootDir, 'native/build/out');
+let buildDir = await path.join(rootDir, 'native', 'build', 'scripted');
+let outDir = await path.join(rootDir, 'native', 'build', 'out');
 
 echo(`Root directory: ${rootDir}`);
 echo(`Build directory: ${buildDir}`);
