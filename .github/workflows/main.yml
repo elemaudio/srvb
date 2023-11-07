@@ -49,19 +49,5 @@ jobs:
           set -x
           set -e
 
-          pushd js
           npm install
           npm run build
-          popd
-
-          # Build the native binaries
-          mkdir -p ./build/native/
-          pushd ./build/native/
-          cmake \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_INSTALL_PREFIX=./out/ \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 \
-            ../..
-
-          cmake --build . --config Release -j 8
-          popd
