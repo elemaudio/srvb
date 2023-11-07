@@ -51,3 +51,14 @@ jobs:
 
           npm install
           npm run build
+
+      - name: Artifact naming
+        shell: bash
+        run: |
+          echo "ARTIFACT_DATESTRING=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+          echo "ARTIFACT_OS=${RUNNER_OS,,}" >> $GITHUB_ENV
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: srvb-${{ env.ARTIFACT_OS }}-${{ env.ARTIFACT_DATESTRING }}
+          path: native/build/out/Release/
