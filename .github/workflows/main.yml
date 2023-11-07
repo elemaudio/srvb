@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           echo "ARTIFACT_DATESTRING=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-          echo "ARTIFACT_OS=${RUNNER_OS,,}" >> $GITHUB_ENV
+          echo "ARTIFACT_OS=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - uses: actions/upload-artifact@v3
         with:
