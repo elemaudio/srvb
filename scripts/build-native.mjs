@@ -13,6 +13,6 @@ await fs.ensureDir(outDir);
 
 cd(buildDir);
 
-await $`cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${outDir} -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 ../..`;
+await $`cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${outDir}" -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15 ../..`;
 await $`cmake --build . --config Release -j 4`;
 await $`cmake --install . --component plugin`;
