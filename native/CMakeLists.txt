@@ -40,7 +40,9 @@ foreach(ACTIVE_TARGET IN LISTS ACTIVE_TARGETS)
 endforeach()
 
 # Enable copy step
-juce_enable_copy_plugin_step(${TARGET_NAME})
+if (NOT DEFINED ENV{CI})
+  juce_enable_copy_plugin_step(${TARGET_NAME})
+endif()
 
 target_sources(${TARGET_NAME}
   PRIVATE
