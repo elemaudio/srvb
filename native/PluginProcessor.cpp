@@ -212,10 +212,6 @@ void EffectsPluginProcessor::handleAsyncUpdate()
         jsContext = choc::javascript::createQuickJSContext();
 
         // Install some native interop functions in our JavaScript environment
-        jsContext.registerFunction("__getSampleRate__", [this](choc::javascript::ArgumentList args) {
-            return choc::value::Value(getSampleRate());
-        });
-
         jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
             auto const batch = elem::js::parseJSON(args[0]->toString());
             auto const rc = runtime->applyInstructions(batch);
@@ -301,7 +297,10 @@ void EffectsPluginProcessor::dispatchStateChange()
     // Need the double serialize here to correctly form the string script. The first
     // serialize produces the payload we want, the second serialize ensures we can replace
     // the % character in the above block and produce a valid javascript expression.
-    auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(state))).toStdString();
+    auto localState = state;
+    localState.insert_or_assign("sampleRate", lastKnownSampleRate);
+
+    auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(localState))).toStdString();
 
     // First we try to dispatch to the UI if it's available, because running this step will
     // just involve placing a message in a queue.

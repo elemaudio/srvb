@@ -50,7 +50,7 @@ function diffuse(size, ...ins) {
 // @param {el.const} decay in the range [0, 1]
 // @param {el.const} modDepth in the range [0, 1]
 // @param {...core.Node} ...ins eight input channels
-function dampFDN(name, size, decay, modDepth, ...ins) {
+function dampFDN(name, sampleRate, size, decay, modDepth, ...ins) {
   const len = ins.length;
   const scale = Math.sqrt(1 / len);
   const md = el.mul(modDepth, 0.02);
@@ -82,7 +82,7 @@ function dampFDN(name, size, decay, modDepth, ...ins) {
 
   return mix.map(function(mm, i) {
     const modulate = (x, rate, amt) => el.add(x, el.mul(amt, el.cycle(rate)));
-    const ms2samps = (ms) => 44100.0 * (ms / 1000.0);
+    const ms2samps = (ms) => sampleRate * (ms / 1000.0);
 
     // Each delay line here will be ((i + 1) * 17)ms long, multiplied by [1, 4]
     // depending on the size parameter. So at size = 0, delay lines are 17, 34, 51, ...,
@@ -122,6 +122,7 @@ export default function srvb(props, xl, xr) {
   invariant(typeof props === 'object', 'Unexpected props object');
 
   const key = props.key;
+  const sampleRate = props.sampleRate;
   const size = el.sm(props.size);
   const decay = el.sm(props.decay);
   const modDepth = el.sm(props.mod);
@@ -134,15 +135,15 @@ export default function srvb(props, xl, xr) {
   const eight = [...four, ...four.map(x => el.mul(-1, x))];
 
   // Diffusion
-  const ms2samps = (ms) => 44100.0 * (ms / 1000.0);
+  const ms2samps = (ms) => sampleRate * (ms / 1000.0);
 
   const d1 = diffuse(ms2samps(43), ...eight);
   const d2 = diffuse(ms2samps(97), ...d1);
   const d3 = diffuse(ms2samps(117), ...d2);
 
   // Reverb network
-  const d4 = dampFDN(`${key}:d4`, size, 0.004, modDepth, ...d3)
-  const r0 = dampFDN(`${key}:r0`, size, decay, modDepth, ...d4);
+  const d4 = dampFDN(`${key}:d4`, sampleRate, size, 0.004, modDepth, ...d3)
+  const r0 = dampFDN(`${key}:r0`, sampleRate, size, decay, modDepth, ...d4);
 
   // Downmix
   //
