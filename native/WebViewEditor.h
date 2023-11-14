@@ -13,7 +13,7 @@ class WebViewEditor : public juce::AudioProcessorEditor
 {
 public:
     //==============================================================================
-    WebViewEditor(juce::AudioProcessor* proc, std::string const& indexFilePath, int width, int height);
+    WebViewEditor(juce::AudioProcessor* proc, juce::File const& assetDirectory, int width, int height);
 
     //==============================================================================
     choc::ui::WebView* getWebViewPtr();

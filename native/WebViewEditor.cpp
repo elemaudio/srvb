@@ -12,8 +12,21 @@ double numberFromChocValue(const choc::value::ValueView& v) {
                     : (double) v.getInt64())));
 }
 
+std::string getMimeType(std::string const& ext) {
+    static std::unordered_map<std::string, std::string> mimeTypes {
+        { ".html",   "text/html" },
+        { ".js",     "application/javascript" },
+        { ".css",    "text/css" },
+    };
+
+    if (mimeTypes.count(ext) > 0)
+        return mimeTypes.at(ext);
+
+    return "application/octet-stream";
+}
+
 //==============================================================================
-WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, std::string const& indexFilePath, int width, int height)
+WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& assetDirectory, int width, int height)
     : juce::AudioProcessorEditor(proc)
 {
     setSize(720, 444);
@@ -23,6 +36,20 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, std::string const& inde
 #if JUCE_DEBUG
     opts.enableDebugMode = true;
 #endif
+
+    opts.fetchResource = [=](const choc::ui::WebView::Options::Path& p) -> std::optional<choc::ui::WebView::Options::Resource> {
+        auto relPath = "." + (p == "/" ? "/index.html" : p);
+        auto f = assetDirectory.getChildFile(relPath);
+        juce::MemoryBlock mb;
+
+        if (!f.existsAsFile() || !f.loadFileAsData(mb))
+            return {};
+
+        return choc::ui::WebView::Options::Resource {
+            std::vector<uint8_t>(mb.begin(), mb.end()),
+            getMimeType(f.getFileExtension().toStdString())
+        };
+    };
 
     webView = std::make_unique<choc::ui::WebView>(opts);
 
@@ -58,8 +85,6 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, std::string const& inde
 
         return {};
     });
-
-    webView->navigate(indexFilePath);
 }
 
 choc::ui::WebView* WebViewEditor::getWebViewPtr()
