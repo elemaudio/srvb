@@ -41,6 +41,9 @@ available at the command line:
 
 Next, we can clone and build as follows.
 
+**Note**: the build steps below expect to run a script in a Bash environment. For Windows machines, consider
+running the following steps in a Git Bash environment, or with WSL.
+
 ```bash
 # Clone the project with its submodules
 git clone --recurse-submodules https://github.com/elemaudio/srvb.git
