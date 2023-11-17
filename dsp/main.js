@@ -1,44 +1,21 @@
 import {Renderer, el} from '@elemaudio/core';
-import invariant from 'invariant';
+import {RefMap} from './RefMap';
 import srvb from './srvb';
 
 
-class RefMap {
-  constructor(core) {
-    this._map = new Map();
-    this._core = core;
-  }
-
-  getOrCreate(name, type, props, children) {
-    if (!this._map.has(name)) {
-      let ref = this._core.createRef(type, props, children);
-      this._map.set(name, ref);
-    }
-
-    return this._map.get(name)[0];
-  }
-
-  update(name, props) {
-    invariant(this._map.has(name), "Oops, trying to update a ref that doesn't exist");
-
-    let [node, setter] = this._map.get(name);
-    setter(props);
-  }
-}
-
-// This example demonstrates writing a very simple chorus effect in Elementary, with a
-// custom Renderer instance that marshals our instruction batches through the __postNativeMessage__
-// function injected into the environment from C++.
+// This project demonstrates writing a small FDN reverb effect in Elementary.
 //
-// Below, we establish a __receiveStateChange__ callback function which will be invoked by the
-// native PluginProcessor when any relevant state changes and we need to update our signal graph.
+// First, we initialize a custom Renderer instance that marshals our instruction
+// batches through the __postNativeMessage__ function to direct the underlying native
+// engine.
 let core = new Renderer((batch) => {
   __postNativeMessage__(JSON.stringify(batch));
 });
 
+// Next, a RefMap for coordinating our refs
 let refs = new RefMap(core);
 
-// Holding onto the previous state allows us a simple way to differentiate
+// Holding onto the previous state allows us a quick way to differentiate
 // when we need to fully re-render versus when we can just update refs
 let prevState = null;
 
@@ -46,7 +23,12 @@ function shouldRender(prevState, nextState) {
   return (prevState === null) || (prevState.sampleRate !== nextState.sampleRate);
 }
 
-// Our state change callback
+// The important piece: here we register a state change callback with the native
+// side. This callback will be hit with the current processor state any time that
+// state changes.
+//
+// Given the new state, we simply update our refs or perform a full render depending
+// on the result of our `shouldRender` check.
 globalThis.__receiveStateChange__ = (serializedState) => {
   const state = JSON.parse(serializedState);
 
@@ -71,7 +53,7 @@ globalThis.__receiveStateChange__ = (serializedState) => {
   prevState = state;
 };
 
-// And an error callback
+// Finally, an error callback which just logs back to native
 globalThis.__receiveError__ = (err) => {
   console.log(`[Error: ${err.name}] ${err.message}`);
 };
