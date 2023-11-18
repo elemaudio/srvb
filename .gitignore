@@ -12,6 +12,7 @@ node_modules
 build
 dist
 *.local
+public/dsp.main.js
 
 # Editor directories and files
 .vscode

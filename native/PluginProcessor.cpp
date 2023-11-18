@@ -248,8 +248,14 @@ void EffectsPluginProcessor::handleAsyncUpdate()
         )shim");
 
         // Load and evaluate our Elementary js main file
-        auto dspEntryFile = getAssetsDirectory().getChildFile("main.js");
-        jsContext.evaluate(dspEntryFile.loadFileAsString().toStdString());
+#if ELEM_DEV_LOCALHOST
+        auto dspEntryFile = juce::URL("http://localhost:5173/dsp.main.js");
+        auto dspEntryFileContents = dspEntryFile.readEntireTextStream().toStdString();
+#else
+        auto dspEntryFile = getAssetsDirectory().getChildFile("dsp.main.js");
+        auto dspEntryFileContents = dspEntryFile.loadFileAsString().toStdString();
+#endif
+        jsContext.evaluate(dspEntryFileContents);
     }
 
     // Next we iterate over the current parameter values to update our local state

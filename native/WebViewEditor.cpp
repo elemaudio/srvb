@@ -37,6 +37,7 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
     opts.enableDebugMode = true;
 #endif
 
+#if ! ELEM_DEV_LOCALHOST
     opts.fetchResource = [=](const choc::ui::WebView::Options::Path& p) -> std::optional<choc::ui::WebView::Options::Resource> {
         auto relPath = "." + (p == "/" ? "/index.html" : p);
         auto f = assetDirectory.getChildFile(relPath);
@@ -50,6 +51,7 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
             getMimeType(f.getFileExtension().toStdString())
         };
     };
+#endif
 
     webView = std::make_unique<choc::ui::WebView>(opts);
 
@@ -85,6 +87,10 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
 
         return {};
     });
+
+#if ELEM_DEV_LOCALHOST
+    webView->navigate("http://localhost:5173");
+#endif
 }
 
 choc::ui::WebView* WebViewEditor::getWebViewPtr()

@@ -3,7 +3,7 @@ import { XCircleIcon, XMarkIcon } from '@heroicons/react/20/solid'
 
 import Knob from './Knob.jsx';
 
-import manifest from '../manifest.json';
+import manifest from '../public/manifest.json';
 
 
 // Generated from Lockup.svg using svgr, and then I changed the generated code

@@ -7,6 +7,7 @@ set(ASSETS_DIR ${CMAKE_SOURCE_DIR}/../dist/)
 
 option(JUCE_ENABLE_MODULE_SOURCE_GROUPS "Enable Module Source Groups" ON)
 option(JUCE_BUILD_EXTRAS "Build JUCE Extras" OFF)
+option(ELEM_DEV_LOCALHOST "Run against localhost for static assets" OFF)
 
 add_subdirectory(juce)
 add_subdirectory(elementary/runtime)
@@ -25,19 +26,21 @@ juce_add_plugin(${TARGET_NAME}
   PRODUCT_NAME ${TARGET_NAME})        # The name of the final executable, which can differ from the target name
 
 # Copy static assets post build
-get_target_property(ACTIVE_TARGETS ${TARGET_NAME} JUCE_ACTIVE_PLUGIN_TARGETS)
-foreach(ACTIVE_TARGET IN LISTS ACTIVE_TARGETS)
-  message(STATUS "Adding resource copy step from ${ASSETS_DIR} for ${ACTIVE_TARGET}")
+if (NOT ELEM_DEV_LOCALHOST)
+  get_target_property(ACTIVE_TARGETS ${TARGET_NAME} JUCE_ACTIVE_PLUGIN_TARGETS)
+  foreach(ACTIVE_TARGET IN LISTS ACTIVE_TARGETS)
+    message(STATUS "Adding resource copy step from ${ASSETS_DIR} for ${ACTIVE_TARGET}")
 
-  get_target_property(ARTIFACT_FILE ${ACTIVE_TARGET} JUCE_PLUGIN_ARTEFACT_FILE)
-  set(RESOURCE_DIR "${ARTIFACT_FILE}/Contents/Resources/")
+    get_target_property(ARTIFACT_FILE ${ACTIVE_TARGET} JUCE_PLUGIN_ARTEFACT_FILE)
+    set(RESOURCE_DIR "${ARTIFACT_FILE}/Contents/Resources/")
 
-  add_custom_command(TARGET ${ACTIVE_TARGET} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E rm -rf "${RESOURCE_DIR}/dist"
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${RESOURCE_DIR}/dist"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${RESOURCE_DIR}/dist"
-    VERBATIM)
-endforeach()
+    add_custom_command(TARGET ${ACTIVE_TARGET} POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E rm -rf "${RESOURCE_DIR}/dist"
+      COMMAND ${CMAKE_COMMAND} -E make_directory "${RESOURCE_DIR}/dist"
+      COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "${RESOURCE_DIR}/dist"
+      VERBATIM)
+  endforeach()
+endif()
 
 # Enable copy step
 if (NOT DEFINED ENV{CI})
@@ -60,6 +63,7 @@ target_compile_features(${TARGET_NAME}
 
 target_compile_definitions(${TARGET_NAME}
   PRIVATE
+  ELEM_DEV_LOCALHOST=${ELEM_DEV_LOCALHOST}
   JUCE_VST3_CAN_REPLACE_VST2=0
   JUCE_USE_CURL=0)
 

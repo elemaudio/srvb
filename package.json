@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "clean": "rimraf dist",
-    "copy": "cpy manifest.json dist/",
+    "predev": "npm run clean",
     "prebuild": "npm run clean",
-    "dev": "vite",
+    "dev": "npm run dev-native && concurrently \"npm run dev-dsp\" \"vite\"",
+    "dev-native": "zx scripts/build-native.mjs --dev",
+    "dev-dsp": "esbuild dsp/main.js --watch --bundle --outfile=public/dsp.main.js",
     "build-native": "zx scripts/build-native.mjs",
-    "build-dsp": "esbuild dsp/main.js --bundle --outdir=dist",
+    "build-dsp": "esbuild dsp/main.js --bundle --outfile=public/dsp.main.js",
     "build-ui": "vite build",
-    "build": "npm run build-ui && npm run build-dsp && npm run copy && npm run build-native",
+    "build": "npm run build-dsp && npm run build-ui && npm run build-native",
     "preview": "vite preview"
   },
   "dependencies": {
