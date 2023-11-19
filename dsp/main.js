@@ -53,6 +53,30 @@ globalThis.__receiveStateChange__ = (serializedState) => {
   prevState = state;
 };
 
+// NOTE: This is highly experimental and should not yet be relied on
+// as a consistent feature.
+//
+// This hook allows the native side to inject serialized graph state from
+// the running elem::Runtime instance so that we can throw away and reinitialize
+// the JavaScript engine and then inject necessary state for coordinating with
+// the underlying engine.
+globalThis.__receiveHydrationData__ = (data) => {
+  const payload = JSON.parse(data);
+  const nodeMap = core._delegate.nodeMap;
+
+  for (let [k, v] of Object.entries(payload)) {
+    nodeMap.set(parseInt(k, 16), {
+      symbol: '__ELEM_NODE__',
+      kind: '__HYDRATED__',
+      hash: parseInt(k, 16),
+      props: v,
+      generation: {
+        current: 0,
+      },
+    });
+  }
+};
+
 // Finally, an error callback which just logs back to native
 globalThis.__receiveError__ = (err) => {
   console.log(`[Error: ${err.name}] ${err.message}`);

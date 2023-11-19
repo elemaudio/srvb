@@ -59,6 +59,9 @@ public:
     void handleAsyncUpdate() override;
 
     //==============================================================================
+    /** Internal helper for initializing the embedded JS engine. */
+    void initJavaScriptEngine();
+
     /** Internal helper for propagating processor state changes. */
     void dispatchStateChange();
     void dispatchError(std::string const& name, std::string const& message);

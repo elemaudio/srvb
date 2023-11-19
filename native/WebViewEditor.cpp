@@ -79,6 +79,15 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
                 }
             }
 
+#if ELEM_DEV_LOCALHOST
+            if (eventName == "reload") {
+                if (auto* ptr = dynamic_cast<EffectsPluginProcessor*>(getAudioProcessor())) {
+                    ptr->initJavaScriptEngine();
+                    ptr->dispatchStateChange();
+                }
+            }
+#endif
+
             if (eventName == "setParameterValue") {
                 jassert(args.size() > 1);
                 return handleSetParameterValueEvent(args[1]);

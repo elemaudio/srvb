@@ -205,57 +205,10 @@ void EffectsPluginProcessor::handleAsyncUpdate()
     // First things first, we check the flag to identify if we should initialize the Elementary
     // runtime and engine.
     if (shouldInitialize.exchange(false)) {
+        // TODO: This is definitely not thread-safe! It could delete a Runtime instance while
+        // the real-time thread is using it. Depends on when the host will call prepareToPlay.
         runtime = std::make_unique<elem::Runtime<float>>(lastKnownSampleRate, lastKnownBlockSize);
-        jsContext = choc::javascript::createQuickJSContext();
-
-        // Install some native interop functions in our JavaScript environment
-        jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
-            auto const batch = elem::js::parseJSON(args[0]->toString());
-            auto const rc = runtime->applyInstructions(batch);
-
-            if (rc != elem::ReturnCode::Ok()) {
-                dispatchError("Runtime Error", elem::ReturnCode::describe(rc));
-            }
-
-            return choc::value::Value();
-        });
-
-        jsContext.registerFunction("__log__", [](choc::javascript::ArgumentList args) {
-            for (size_t i = 0; i < args.numArgs; ++i) {
-                DBG(choc::json::toString(*args[i], true));
-            }
-
-            return choc::value::Value();
-        });
-
-        // A simple shim to write various console operations to our native __log__ handler
-        jsContext.evaluate(R"shim(
-    (function() {
-      if (typeof globalThis.console === 'undefined') {
-        globalThis.console = {
-          log(...args) {
-            __log__('[log]', ...args);
-          },
-          warn(...args) {
-              __log__('[warn]', ...args);
-          },
-          error(...args) {
-              __log__('[error]', ...args);
-          }
-        };
-      }
-    })();
-        )shim");
-
-        // Load and evaluate our Elementary js main file
-#if ELEM_DEV_LOCALHOST
-        auto dspEntryFile = juce::URL("http://localhost:5173/dsp.main.js");
-        auto dspEntryFileContents = dspEntryFile.readEntireTextStream().toStdString();
-#else
-        auto dspEntryFile = getAssetsDirectory().getChildFile("dsp.main.js");
-        auto dspEntryFileContents = dspEntryFile.loadFileAsString().toStdString();
-#endif
-        jsContext.evaluate(dspEntryFileContents);
+        initJavaScriptEngine();
     }
 
     // Next we iterate over the current parameter values to update our local state
@@ -283,6 +236,74 @@ void EffectsPluginProcessor::handleAsyncUpdate()
     }
 
     dispatchStateChange();
+}
+
+void EffectsPluginProcessor::initJavaScriptEngine()
+{
+    jsContext = choc::javascript::createQuickJSContext();
+
+    // Install some native interop functions in our JavaScript environment
+    jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
+        auto const batch = elem::js::parseJSON(args[0]->toString());
+        auto const rc = runtime->applyInstructions(batch);
+
+        if (rc != elem::ReturnCode::Ok()) {
+            dispatchError("Runtime Error", elem::ReturnCode::describe(rc));
+        }
+
+        return choc::value::Value();
+    });
+
+    jsContext.registerFunction("__log__", [](choc::javascript::ArgumentList args) {
+        for (size_t i = 0; i < args.numArgs; ++i) {
+            DBG(choc::json::toString(*args[i], true));
+        }
+
+        return choc::value::Value();
+    });
+
+    // A simple shim to write various console operations to our native __log__ handler
+    jsContext.evaluate(R"shim(
+(function() {
+  if (typeof globalThis.console === 'undefined') {
+    globalThis.console = {
+      log(...args) {
+        __log__('[log]', ...args);
+      },
+      warn(...args) {
+          __log__('[warn]', ...args);
+      },
+      error(...args) {
+          __log__('[error]', ...args);
+      }
+    };
+  }
+})();
+    )shim");
+
+    // Load and evaluate our Elementary js main file
+#if ELEM_DEV_LOCALHOST
+    auto dspEntryFile = juce::URL("http://localhost:5173/dsp.main.js");
+    auto dspEntryFileContents = dspEntryFile.readEntireTextStream().toStdString();
+#else
+    auto dspEntryFile = getAssetsDirectory().getChildFile("dsp.main.js");
+    auto dspEntryFileContents = dspEntryFile.loadFileAsString().toStdString();
+#endif
+    jsContext.evaluate(dspEntryFileContents);
+
+    // Re-hydrate from current state
+    const auto* kHydrateScript = R"script(
+(function() {
+  if (typeof globalThis.__receiveHydrationData__ !== 'function')
+    return false;
+
+  globalThis.__receiveHydrationData__(%);
+  return true;
+})();
+)script";
+
+    auto expr = juce::String(kHydrateScript).replace("%", elem::js::serialize(elem::js::serialize(runtime->snapshot()))).toStdString();
+    jsContext.evaluate(expr);
 }
 
 void EffectsPluginProcessor::dispatchStateChange()
