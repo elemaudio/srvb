@@ -8,7 +8,7 @@ function cx(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-function draw(ctx, width, height, value, trackColor, meterColor, knobColor, thumbColor) {
+function draw(ctx, width, height, value, meterColor, knobColor, thumbColor) {
   ctx.clearRect(0, 0, width, height);
 
   const hw = width * 0.5;
@@ -55,7 +55,7 @@ function Knob(props) {
     height: 0,
   });
 
-  let {className, trackColor, meterColor, knobColor, thumbColor, ...other} = props;
+  let {className, meterColor, knobColor, thumbColor, ...other} = props;
   let classes = cx(className, 'relative touch-none');
 
   useEffect(function() {
@@ -84,8 +84,8 @@ function Knob(props) {
     canvas.width = bounds.width;
     canvas.height = bounds.height;
 
-    draw(ctx, bounds.width, bounds.height, props.value, trackColor, meterColor, knobColor, thumbColor);
-  }, [bounds, props.value]);
+    draw(ctx, bounds.width, bounds.height, props.value, meterColor, knobColor, thumbColor);
+  }, [bounds, props.value, meterColor, knobColor, thumbColor]);
 
   return (
     <DragBehavior className={classes} {...other}>
