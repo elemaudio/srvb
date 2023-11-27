@@ -32,44 +32,52 @@ EffectsPluginProcessor::EffectsPluginProcessor()
      , jsContext(choc::javascript::createQuickJSContext())
 {
     // Initialize parameters from the manifest file
+#if ELEM_DEV_LOCALHOST
+    auto manifestFile = juce::URL("http://localhost:5173/manifest.json");
+    auto manifestFileContents = manifestFile.readEntireTextStream().toStdString();
+#else
     auto manifestFile = getAssetsDirectory().getChildFile("manifest.json");
+    std::string manifestFileContents;
 
     if (manifestFile.existsAsFile()) {
-        auto manifest = elem::js::parseJSON(manifestFile.loadFileAsString().toStdString());
+        manifestFileContents = manifestFile.loadFileAsString().toStdString();
+    }
+#endif
 
-        if (!manifest.isObject())
-            return;
+    auto manifest = elem::js::parseJSON(manifestFileContents);
 
-        auto parameters = manifest.getWithDefault("parameters", elem::js::Array());
+    if (!manifest.isObject())
+        return;
 
-        for (size_t i = 0; i < parameters.size(); ++i) {
-            auto descrip = parameters[i];
+    auto parameters = manifest.getWithDefault("parameters", elem::js::Array());
 
-            if (!descrip.isObject())
-                continue;
+    for (size_t i = 0; i < parameters.size(); ++i) {
+        auto descrip = parameters[i];
 
-            auto paramId = descrip.getWithDefault("paramId", elem::js::String("unknown"));
-            auto name = descrip.getWithDefault("name", elem::js::String("Unknown"));
-            auto minValue = descrip.getWithDefault("min", elem::js::Number(0));
-            auto maxValue = descrip.getWithDefault("max", elem::js::Number(1));
-            auto defValue = descrip.getWithDefault("defaultValue", elem::js::Number(0));
+        if (!descrip.isObject())
+            continue;
 
-            auto* p = new juce::AudioParameterFloat(
-                juce::ParameterID(paramId, 1),
-                name,
-                {static_cast<float>(minValue), static_cast<float>(maxValue)},
-                defValue
-            );
+        auto paramId = descrip.getWithDefault("paramId", elem::js::String("unknown"));
+        auto name = descrip.getWithDefault("name", elem::js::String("Unknown"));
+        auto minValue = descrip.getWithDefault("min", elem::js::Number(0));
+        auto maxValue = descrip.getWithDefault("max", elem::js::Number(1));
+        auto defValue = descrip.getWithDefault("defaultValue", elem::js::Number(0));
 
-            p->addListener(this);
-            addParameter(p);
+        auto* p = new juce::AudioParameterFloat(
+            juce::ParameterID(paramId, 1),
+            name,
+            {static_cast<float>(minValue), static_cast<float>(maxValue)},
+            defValue
+        );
 
-            // Push a new ParameterReadout onto the list to represent this parameter
-            paramReadouts.emplace_back(ParameterReadout { static_cast<float>(defValue), false });
+        p->addListener(this);
+        addParameter(p);
 
-            // Update our state object with the default parameter value
-            state.insert_or_assign(paramId, defValue);
-        }
+        // Push a new ParameterReadout onto the list to represent this parameter
+        paramReadouts.emplace_back(ParameterReadout { static_cast<float>(defValue), false });
+
+        // Update our state object with the default parameter value
+        state.insert_or_assign(paramId, defValue);
     }
 }
 
