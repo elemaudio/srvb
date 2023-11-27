@@ -17,13 +17,15 @@ const dateString = `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate(
 function pubDirReloadPlugin() {
   return {
     name: 'pubDirReload',
-    handleHotUpdate({file, server}) {
+    handleHotUpdate({file, modules, server}) {
       if (file.includes('public/dsp.main.js')) {
         server.ws.send({
           type: 'custom',
           event: 'reload-dsp',
         });
       }
+
+      return modules;
     }
   };
 }
