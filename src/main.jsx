@@ -25,13 +25,15 @@ function requestParamValueUpdate(paramId, value) {
   }
 }
 
-import.meta.hot.on('reload-dsp', () => {
-  console.log('Sending reload dsp message');
+if (process.env.NODE_ENV !== 'production') {
+  import.meta.hot.on('reload-dsp', () => {
+    console.log('Sending reload dsp message');
 
-  if (typeof globalThis.__postNativeMessage__ === 'function') {
-    globalThis.__postNativeMessage__('reload');
-  }
-});
+    if (typeof globalThis.__postNativeMessage__ === 'function') {
+      globalThis.__postNativeMessage__('reload');
+    }
+  });
+}
 
 globalThis.__receiveStateChange__ = function(state) {
   store.setState(JSON.parse(state));
