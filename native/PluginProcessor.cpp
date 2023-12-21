@@ -271,8 +271,6 @@ void EffectsPluginProcessor::initJavaScriptEngine()
 )script";
 
         for (size_t i = 0; i < args.numArgs; ++i) {
-            DBG(choc::json::toString(*args[i], true));
-
             // Dispatch to the UI if it's available
             if (auto* editor = static_cast<WebViewEditor*>(getActiveEditor())) {
                 auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(choc::json::toString(*args[i], false)))).toStdString();
