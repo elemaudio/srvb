@@ -262,8 +262,7 @@ void EffectsPluginProcessor::initJavaScriptEngine()
         return choc::value::Value();
     });
 
-    jsContext.registerFunction("__log__", [&](choc::javascript::ArgumentList args) {
-
+    jsContext.registerFunction("__log__", [this](choc::javascript::ArgumentList args) {
         const auto* kDispatchScript = R"script(
 (function() {
   console.log(%);
