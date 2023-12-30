@@ -7,6 +7,8 @@ let buildDir = await path.join(rootDir, 'native', 'build', 'scripted');
 echo(`Root directory: ${rootDir}`);
 echo(`Build directory: ${buildDir}`);
 
+// Clean the build directory before we build
+await fs.remove(buildDir);
 await fs.ensureDir(buildDir);
 
 cd(buildDir);
