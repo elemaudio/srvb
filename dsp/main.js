@@ -31,7 +31,6 @@ function shouldRender(prevState, nextState) {
 // on the result of our `shouldRender` check.
 globalThis.__receiveStateChange__ = (serializedState) => {
   const state = JSON.parse(serializedState);
-
   if (shouldRender(prevState, state)) {
     let stats = core.render(...srvb({
       key: 'srvb',

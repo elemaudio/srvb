@@ -262,9 +262,20 @@ void EffectsPluginProcessor::initJavaScriptEngine()
         return choc::value::Value();
     });
 
-    jsContext.registerFunction("__log__", [](choc::javascript::ArgumentList args) {
+    jsContext.registerFunction("__log__", [this](choc::javascript::ArgumentList args) {
+        const auto* kDispatchScript = R"script(
+(function() {
+  console.log(%);
+  return true;
+})();
+)script";
+
         for (size_t i = 0; i < args.numArgs; ++i) {
-            DBG(choc::json::toString(*args[i], true));
+            // Dispatch to the UI if it's available
+            if (auto* editor = static_cast<WebViewEditor*>(getActiveEditor())) {
+                auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(choc::json::toString(*args[i], false)))).toStdString();
+                editor->getWebViewPtr()->evaluateJavascript(expr);
+            }
         }
 
         return choc::value::Value();
