@@ -176,21 +176,23 @@ bool EffectsPluginProcessor::isBusesLayoutSupported (const AudioProcessor::Buses
 
 void EffectsPluginProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& /* midiMessages */)
 {
-    if (runtime == nullptr)
-        return;
-
     // Copy the input so that our input and output buffers are distinct
     scratchBuffer.makeCopyOf(buffer, true);
 
+    // Clear the output buffer to prevent any garbage if our runtime isn't ready
+    buffer.clear();
+
     // Process the elementary runtime
-    runtime->process(
-        const_cast<const float**>(scratchBuffer.getArrayOfWritePointers()),
-        getTotalNumInputChannels(),
-        const_cast<float**>(buffer.getArrayOfWritePointers()),
-        buffer.getNumChannels(),
-        buffer.getNumSamples(),
-        nullptr
-    );
+    if (runtime != nullptr) {
+        runtime->process(
+            const_cast<const float**>(scratchBuffer.getArrayOfWritePointers()),
+            getTotalNumInputChannels(),
+            const_cast<float**>(buffer.getArrayOfWritePointers()),
+            buffer.getNumChannels(),
+            buffer.getNumSamples(),
+            nullptr
+        );
+    }
 }
 
 void EffectsPluginProcessor::parameterValueChanged (int parameterIndex, float newValue)
