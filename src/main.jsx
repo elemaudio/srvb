@@ -39,6 +39,10 @@ globalThis.__receiveStateChange__ = function(state) {
   store.setState(JSON.parse(state));
 };
 
+globalThis.__receiveGraphEvents__ = function(eventBatch) {
+  console.log(JSON.parse(eventBatch));
+};
+
 globalThis.__receiveError__ = (err) => {
   errorStore.setState({ error: err });
 };

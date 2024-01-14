@@ -217,6 +217,11 @@ void EffectsPluginProcessor::handleAsyncUpdate()
         // TODO: This is definitely not thread-safe! It could delete a Runtime instance while
         // the real-time thread is using it. Depends on when the host will call prepareToPlay.
         runtime = std::make_unique<elem::Runtime<float>>(lastKnownSampleRate, lastKnownBlockSize);
+
+        eventsTimer = std::make_unique<LambdaTimer<std::function<void()>>>(60, [this]() {
+            dispatchGraphEvents();
+        });
+
         initJavaScriptEngine();
     }
 
@@ -369,6 +374,35 @@ void EffectsPluginProcessor::dispatchStateChange()
     // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
     // here on the main thread
     jsContext.evaluate(expr);
+}
+
+void EffectsPluginProcessor::dispatchGraphEvents()
+{
+    const auto* kDispatchScript = R"script(
+(function() {
+  if (typeof globalThis.__receiveGraphEvents__ !== 'function')
+    return false;
+
+  globalThis.__receiveGraphEvents__(%);
+  return true;
+})();
+)script";
+
+    if (runtime) {
+        elem::js::Array batch;
+
+        runtime->processQueuedEvents([this, &batch](std::string const& type, elem::js::Value evt) {
+            batch.push_back(elem::js::Object({
+                {"type", type},
+                {"event", evt}
+            }));
+        });
+
+        if (auto* editor = static_cast<WebViewEditor*>(getActiveEditor())) {
+            auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(elem::js::serialize(batch))).toStdString();
+            editor->getWebViewPtr()->evaluateJavascript(expr);
+        }
+    }
 }
 
 void EffectsPluginProcessor::dispatchError(std::string const& name, std::string const& message)

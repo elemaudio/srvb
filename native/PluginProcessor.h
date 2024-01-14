@@ -6,6 +6,8 @@
 #include <choc_javascript.h>
 #include <elem/Runtime.h>
 
+#include "LambdaTimer.h"
+
 
 //==============================================================================
 class EffectsPluginProcessor
@@ -64,6 +66,7 @@ public:
 
     /** Internal helper for propagating processor state changes. */
     void dispatchStateChange();
+    void dispatchGraphEvents();
     void dispatchError(std::string const& name, std::string const& message);
 
 private:
@@ -78,6 +81,7 @@ private:
     juce::AudioBuffer<float> scratchBuffer;
 
     std::unique_ptr<elem::Runtime<float>> runtime;
+    std::unique_ptr<LambdaTimer<std::function<void()>>> eventsTimer;
 
     //==============================================================================
     // A simple "dirty list" abstraction here for propagating realtime parameter
