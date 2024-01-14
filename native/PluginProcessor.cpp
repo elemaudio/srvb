@@ -20,7 +20,6 @@ juce::File getAssetsDirectory()
 #error "We only support Mac and Windows here yet."
 #endif
 
-    jassert(assetsDir.isDirectory());
     return assetsDir;
 }
 
@@ -37,11 +36,11 @@ EffectsPluginProcessor::EffectsPluginProcessor()
     auto manifestFileContents = manifestFile.readEntireTextStream().toStdString();
 #else
     auto manifestFile = getAssetsDirectory().getChildFile("manifest.json");
-    std::string manifestFileContents;
 
-    if (manifestFile.existsAsFile()) {
-        manifestFileContents = manifestFile.loadFileAsString().toStdString();
-    }
+    if (!manifestFile.existsAsFile())
+        return;
+
+    auto manifestFileContents = manifestFile.loadFileAsString().toStdString();
 #endif
 
     auto manifest = elem::js::parseJSON(manifestFileContents);
@@ -318,6 +317,10 @@ void EffectsPluginProcessor::initJavaScriptEngine()
     auto dspEntryFileContents = dspEntryFile.readEntireTextStream().toStdString();
 #else
     auto dspEntryFile = getAssetsDirectory().getChildFile("dsp.main.js");
+
+    if (!dspEntryFile.existsAsFile())
+        return;
+
     auto dspEntryFileContents = dspEntryFile.loadFileAsString().toStdString();
 #endif
     jsContext.evaluate(dspEntryFileContents);
