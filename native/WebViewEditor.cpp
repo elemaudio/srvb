@@ -88,8 +88,7 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
             }
 #endif
 
-            if (eventName == "setParameterValue") {
-                jassert(args.size() > 1);
+            if (eventName == "setParameterValue" && args.size() > 1) {
                 return handleSetParameterValueEvent(args[1]);
             }
         }
