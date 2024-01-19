@@ -1,5 +1,5 @@
-import {Renderer, el} from '@elemaudio/core';
-import {RefMap} from './RefMap';
+import { Renderer, el } from '@elemaudio/core';
+import { RefMap } from './RefMap';
 import srvb from './srvb';
 
 
@@ -36,19 +36,19 @@ globalThis.__receiveStateChange__ = (serializedState) => {
     let stats = core.render(...srvb({
       key: 'srvb',
       sampleRate: state.sampleRate,
-      size: refs.getOrCreate('size', 'const', {value: state.size}, []),
-      decay: refs.getOrCreate('decay', 'const', {value: state.decay}, []),
-      mod: refs.getOrCreate('mod', 'const', {value: state.mod}, []),
-      mix: refs.getOrCreate('mix', 'const', {value: state.mix}, []),
-    }, el.in({channel: 0}), el.in({channel: 1})));
+      size: refs.getOrCreate('size', 'const', { value: state.size }, []),
+      decay: refs.getOrCreate('decay', 'const', { value: state.decay }, []),
+      mod: refs.getOrCreate('mod', 'const', { value: state.mod }, []),
+      mix: refs.getOrCreate('mix', 'const', { value: state.mix }, []),
+    }, el.in({ channel: 0 }), el.in({ channel: 1 })));
 
     console.log(stats);
   } else {
     console.log('Updating refs');
-    refs.update('size', {value: state.size});
-    refs.update('decay', {value: state.decay});
-    refs.update('mod', {value: state.mod});
-    refs.update('mix', {value: state.mix});
+    refs.update('size', { value: state.size });
+    refs.update('decay', { value: state.decay });
+    refs.update('mod', { value: state.mod });
+    refs.update('mix', { value: state.mix });
   }
 
   prevState = state;
