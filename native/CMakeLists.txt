@@ -52,6 +52,18 @@ target_sources(${TARGET_NAME}
   PluginProcessor.cpp
   WebViewEditor.cpp)
 
+if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules (gtk3 REQUIRED gtk+-3.0 IMPORTED_TARGET)
+    pkg_check_modules (webkit2 REQUIRED webkit2gtk-4.0 IMPORTED_TARGET)
+    target_link_libraries (${TARGET_NAME}
+      PRIVATE
+      pthread
+      PkgConfig::gtk3
+      PkgConfig::webkit2
+    )
+endif()
+
 target_include_directories(${TARGET_NAME}
   PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/choc/gui
