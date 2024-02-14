@@ -59,8 +59,12 @@ WebViewEditor::WebViewEditor(juce::AudioProcessor* proc, juce::File const& asset
     viewContainer.setView(webView->getViewHandle());
 #elif JUCE_WINDOWS
     viewContainer.setHWND(webView->getViewHandle());
+#elif JUCE_LINUX
+    // TODO
+    // viewContainer.setView(webView->getViewHandle());
 #else
 #error "We only support MacOS and Windows here yet."
+
 #endif
 
     addAndMakeVisible(viewContainer);

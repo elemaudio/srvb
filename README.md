@@ -41,6 +41,21 @@ available at the command line:
 * [CMake](https://cmake.org/)
 * [Node.js](https://nodejs.org/en)
 * Bash: the build steps below expect to run scripts in a Bash environment. For Windows machines, consider running the following steps in a Git Bash environment, or with WSL.
+* For Linux you'll need the following:
+
+```
+sudo apt install -y build-essential \
+    gnome-devel \
+    libxinerama-dev \
+    libxrandr-dev \
+    libxcursor-dev \
+    libxft2-dev \
+    libwebkit2gtk-4.0-dev \
+    libgtk-3-dev \
+    libalsaplayer-dev \
+    libcurl4-dev-openssl \
+    libasound2-dev
+```
 
 Next, we fetch the SRVB project and its dependencies,
 

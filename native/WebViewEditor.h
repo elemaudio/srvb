@@ -33,7 +33,9 @@ private:
     juce::NSViewComponent viewContainer;
 #elif JUCE_WINDOWS
     juce::HWNDComponent viewContainer;
+#elif JUCE_LINUX
+    juce::XEmbedComponent viewContainer;
 #else
- #error "We only support MacOS and Windows here yet."
+    #error "We only support MacOS, Windows, and Linux here yet."
 #endif
 };
