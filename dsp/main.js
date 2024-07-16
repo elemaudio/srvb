@@ -2,7 +2,6 @@ import {Renderer, el} from '@elemaudio/core';
 import {RefMap} from './RefMap';
 import srvb from './srvb';
 
-
 // This project demonstrates writing a small FDN reverb effect in Elementary.
 //
 // First, we initialize a custom Renderer instance that marshals our instruction
@@ -20,7 +19,7 @@ let refs = new RefMap(core);
 let prevState = null;
 
 function shouldRender(prevState, nextState) {
-  return (prevState === null) || (prevState.sampleRate !== nextState.sampleRate);
+  return (prevState === null) || (nextState ===null) || (prevState.sampleRate !== nextState.sampleRate);
 }
 
 // The important piece: here we register a state change callback with the native

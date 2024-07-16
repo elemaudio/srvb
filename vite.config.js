@@ -1,11 +1,5 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-
-import { execSync } from 'node:child_process'
-
-const currentCommit = execSync("git rev-parse --short HEAD").toString();
-const date = new Date();
-const dateString = `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate()}`;
+import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 // A helper plugin which specifically watches for changes to public/dsp.main.js,
 // which is built in a parallel watch job via esbuild during dev.
@@ -17,8 +11,8 @@ const dateString = `${date.getFullYear()}.${date.getMonth() + 1}.${date.getDate(
 function pubDirReloadPlugin() {
   return {
     name: 'pubDirReload',
-    handleHotUpdate({file, modules, server}) {
-      if (file.includes('public/dsp.main.js')) {
+    handleHotUpdate({ file, modules, server }) {
+      if (file.includes('public/dsp.main.js' )) {
         server.ws.send({
           type: 'custom',
           event: 'reload-dsp',
@@ -30,12 +24,19 @@ function pubDirReloadPlugin() {
   };
 }
 
-// https://vitejs.dev/config/
+// related to the audio blanking error on some devices
+// is the order of plugins important?
 export default defineConfig({
   base: './',
-  define: {
-    __COMMIT_HASH__: JSON.stringify(currentCommit),
-    __BUILD_DATE__: JSON.stringify(dateString),
+  plugins: [    
+    svelte(),
+    pubDirReloadPlugin(),
+  ],
+  server: {
+    watch: {
+      // The paths to be added to the watch list
+
+    }
   },
-  plugins: [react(), pubDirReloadPlugin()],
+  
 })

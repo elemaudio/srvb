@@ -1,12 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Elementary Effects Plugin</title>
+    <title>Four GL Dials</title>
+    <style>
+      body {
+        margin: 0;
+        background-color: #000;
+        color: #fff;
+        font-family: Helvetica, Arial, sans-serif;
+        overflow: hidden; /* disable scrolling / rubberband effect on mobile */
+        height: 100vh;
+      }
+
+      canvas {
+        display: block;
+        position: absolute;
+        outline: 0;
+      }
+
+      * {
+        /* disable on touch highlights of html elements, especially on mobile! */
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: auto;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: auto;
+      }
+    </style>
+
+    <meta charset="utf-8" />
+    
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    
   </body>
 </html>
