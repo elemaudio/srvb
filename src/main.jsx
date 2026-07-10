@@ -2,18 +2,18 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import Interface from './Interface.jsx'
 
-import createHooks from 'zustand'
-import createStore from 'zustand/vanilla'
+import { useStore as useZustandStore } from 'zustand'
+import { createStore } from 'zustand/vanilla'
 
 import './index.css'
 
 
 // Initial state management
 const store = createStore(() => {});
-const useStore = createHooks(store);
+const useStore = () => useZustandStore(store);
 
 const errorStore = createStore(() => ({ error: null }));
-const useErrorStore = createHooks(errorStore);
+const useErrorStore = () => useZustandStore(errorStore);
 
 // Interop bindings
 function requestParamValueUpdate(paramId, value) {
