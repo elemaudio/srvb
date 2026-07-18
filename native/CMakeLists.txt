@@ -22,6 +22,8 @@ juce_add_plugin(${TARGET_NAME}
   COPY_PLUGIN_AFTER_BUILD FALSE       # We enable this manually below after adding a copy step
   APP_SANDBOX_ENABLED TRUE
   APP_SANDBOX_OPTIONS com.apple.security.network.client com.apple.security.files.user-selected.read-write
+  NEEDS_WEB_BROWSER TRUE
+  NEEDS_WEBVIEW2 TRUE
   FORMATS AU VST3                     # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
   PRODUCT_NAME ${TARGET_NAME})        # The name of the final executable, which can differ from the target name
 
@@ -52,11 +54,6 @@ target_sources(${TARGET_NAME}
   PluginProcessor.cpp
   WebViewEditor.cpp)
 
-target_include_directories(${TARGET_NAME}
-  PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/choc/gui
-  ${CMAKE_CURRENT_SOURCE_DIR}/choc/javascript)
-
 target_compile_features(${TARGET_NAME}
   PRIVATE
   cxx_std_17)
@@ -64,6 +61,7 @@ target_compile_features(${TARGET_NAME}
 target_compile_definitions(${TARGET_NAME}
   PRIVATE
   ELEM_DEV_LOCALHOST=${ELEM_DEV_LOCALHOST}
+  JUCE_USE_WIN_WEBVIEW2=1
   JUCE_VST3_CAN_REPLACE_VST2=0
   JUCE_USE_CURL=0)
 
@@ -81,4 +79,5 @@ target_link_libraries(${TARGET_NAME}
   juce::juce_graphics
   juce::juce_gui_basics
   juce::juce_gui_extra
+  juce::juce_javascript
   runtime)

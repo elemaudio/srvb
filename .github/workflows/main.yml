@@ -43,6 +43,14 @@ jobs:
           sudo apt-get install -y libxrandr-dev
           sudo apt-get install -y mesa-common-dev
 
+      - name: JUCE Windows Dependencies
+        shell: pwsh
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          $webView2Dir = "$env:RUNNER_TEMP\webview2" -replace "\\", "/"
+          nuget install Microsoft.Web.WebView2 -Version 1.0.3485.44 -OutputDirectory $webView2Dir
+          "JUCE_WEBVIEW2_PACKAGE_LOCATION=$webView2Dir" >> $env:GITHUB_ENV
+
       - name: Build
         shell: bash
         run: |
@@ -58,7 +66,7 @@ jobs:
           echo "ARTIFACT_DATESTRING=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
           echo "ARTIFACT_OS=$(echo $RUNNER_OS | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: srvb-${{ env.ARTIFACT_OS }}-${{ env.ARTIFACT_DATESTRING }}
           path: |

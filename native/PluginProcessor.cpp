@@ -1,9 +1,6 @@
 #include "PluginProcessor.h"
 #include "WebViewEditor.h"
 
-#include <choc_javascript_QuickJS.h>
-
-
 //==============================================================================
 // A quick helper for locating bundled asset files
 juce::File getAssetsDirectory()
@@ -27,8 +24,8 @@ juce::File getAssetsDirectory()
 EffectsPluginProcessor::EffectsPluginProcessor()
      : AudioProcessor (BusesProperties()
                        .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
-                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true))
-     , jsContext(choc::javascript::createQuickJSContext())
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)),
+       jsContext(std::make_unique<juce::JavascriptEngine>())
 {
     // Initialize parameters from the manifest file
 #if ELEM_DEV_LOCALHOST
@@ -91,7 +88,7 @@ EffectsPluginProcessor::~EffectsPluginProcessor()
 //==============================================================================
 juce::AudioProcessorEditor* EffectsPluginProcessor::createEditor()
 {
-    return new WebViewEditor(this, getAssetsDirectory(), 800, 704);
+    return new WebViewEditor(this, getAssetsDirectory(), 753, 373);
 }
 
 bool EffectsPluginProcessor::hasEditor() const
@@ -249,51 +246,64 @@ void EffectsPluginProcessor::handleAsyncUpdate()
 
 void EffectsPluginProcessor::initJavaScriptEngine()
 {
-    jsContext = choc::javascript::createQuickJSContext();
+    jsContext = std::make_unique<juce::JavascriptEngine>();
 
-    // Install some native interop functions in our JavaScript environment
-    jsContext.registerFunction("__postNativeMessage__", [this](choc::javascript::ArgumentList args) {
-        auto const batch = elem::js::parseJSON(args[0]->toString());
-        auto const rc = runtime->applyInstructions(batch);
+    auto* bridge = new juce::DynamicObject();
+    bridge->setMethod ("postNativeMessage", [this] (const juce::var::NativeFunctionArgs& args) -> juce::var
+    {
+        const auto batch = elem::js::parseJSON (args.arguments[0].toString().toStdString());
+        const auto rc = runtime->applyInstructions (batch);
 
-        if (rc != elem::ReturnCode::Ok()) {
-            dispatchError("Runtime Error", elem::ReturnCode::describe(rc));
-        }
+        if (rc != elem::ReturnCode::Ok())
+            dispatchError ("Runtime Error", elem::ReturnCode::describe (rc));
 
-        return choc::value::Value();
+        return {};
     });
 
-    jsContext.registerFunction("__log__", [this](choc::javascript::ArgumentList args) {
-        const auto* kDispatchScript = R"script(
+    bridge->setMethod ("log", [this] (const juce::var::NativeFunctionArgs& args) -> juce::var
+    {
+        juce::Array<juce::var> values;
+        for (int i = 0; i < args.numArguments; ++i)
+            values.add (args.arguments[i]);
+
+        const auto payload = juce::JSON::toString (juce::var (values), false);
+
+        if (auto* editor = static_cast<WebViewEditor*> (getActiveEditor()))
+        {
+            const auto script = juce::String (R"script(
 (function() {
   console.log(...JSON.parse(%));
   return true;
 })();
-)script";
+)script").replace ("%", juce::JSON::toString (juce::var (payload), false)).toStdString();
 
-        // Forward logs to the editor if it's available; then logs show up in one place.
-        //
-        // If not available, we fall back to std out.
-        if (auto* editor = static_cast<WebViewEditor*>(getActiveEditor())) {
-            auto v = choc::value::createEmptyArray();
-
-            for (size_t i = 0; i < args.numArgs; ++i) {
-                v.addArrayElement(*args[i]);
-            }
-
-            auto expr = juce::String(kDispatchScript).replace("%", elem::js::serialize(choc::json::toString(v))).toStdString();
-            editor->getWebViewPtr()->evaluateJavascript(expr);
-        } else {
-            for (size_t i = 0; i < args.numArgs; ++i) {
-                DBG(choc::json::toString(*args[i]));
-            }
+            editor->getWebViewPtr()->evaluateJavascript (script);
+        }
+        else
+        {
+            DBG (payload);
         }
 
-        return choc::value::Value();
+        return {};
     });
 
+    jsContext->registerNativeObject ("__native", bridge);
+
+    // Install some native interop functions in our JavaScript environment
+    jsContext->execute (R"shim(
+(function() {
+  globalThis.__postNativeMessage__ = function(payload) {
+    return __native.postNativeMessage(payload);
+  };
+
+  globalThis.__log__ = function(...args) {
+    return __native.log(JSON.stringify(args));
+  };
+})();
+)shim");
+
     // A simple shim to write various console operations to our native __log__ handler
-    jsContext.evaluate(R"shim(
+    jsContext->execute(R"shim(
 (function() {
   if (typeof globalThis.console === 'undefined') {
     globalThis.console = {
@@ -323,7 +333,7 @@ void EffectsPluginProcessor::initJavaScriptEngine()
 
     auto dspEntryFileContents = dspEntryFile.loadFileAsString().toStdString();
 #endif
-    jsContext.evaluate(dspEntryFileContents);
+    jsContext->execute(dspEntryFileContents);
 
     // Re-hydrate from current state
     const auto* kHydrateScript = R"script(
@@ -337,7 +347,7 @@ void EffectsPluginProcessor::initJavaScriptEngine()
 )script";
 
     auto expr = juce::String(kHydrateScript).replace("%", elem::js::serialize(elem::js::serialize(runtime->snapshot()))).toStdString();
-    jsContext.evaluate(expr);
+    jsContext->execute(expr);
 }
 
 void EffectsPluginProcessor::dispatchStateChange()
@@ -368,7 +378,7 @@ void EffectsPluginProcessor::dispatchStateChange()
 
     // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
     // here on the main thread
-    jsContext.evaluate(expr);
+    jsContext->execute(expr);
 }
 
 void EffectsPluginProcessor::dispatchError(std::string const& name, std::string const& message)
@@ -397,7 +407,7 @@ void EffectsPluginProcessor::dispatchError(std::string const& name, std::string 
 
     // Next we dispatch to the local engine which will evaluate any necessary JavaScript synchronously
     // here on the main thread
-    jsContext.evaluate(expr);
+    jsContext->execute(expr);
 }
 
 //==============================================================================

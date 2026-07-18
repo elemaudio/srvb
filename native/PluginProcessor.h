@@ -3,7 +3,7 @@
 #include <juce_audio_basics/juce_audio_basics.h>
 #include <juce_audio_processors/juce_audio_processors.h>
 
-#include <choc_javascript.h>
+#include <juce_javascript/juce_javascript.h>
 #include <elem/Runtime.h>
 
 
@@ -73,7 +73,7 @@ private:
     int lastKnownBlockSize = 0;
 
     elem::js::Object state;
-    choc::javascript::Context jsContext;
+    std::unique_ptr<juce::JavascriptEngine> jsContext;
 
     juce::AudioBuffer<float> scratchBuffer;
 
